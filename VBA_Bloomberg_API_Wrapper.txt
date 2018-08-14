@@ -1,5 +1,4 @@
 'Yingke
-'name the class module as Bloomwrap
 
 Option Explicit
 Option Compare Text
@@ -72,6 +71,7 @@ Public Function RefRequest(sSecList() As String, sFldList As Variant, Optional s
             Set it = eventObj.CreateMessageIterator()
             
             Do While it.Next()
+                
                 Dim msg As Message
                 Set msg = it.Message
                 
@@ -83,27 +83,29 @@ Public Function RefRequest(sSecList() As String, sFldList As Variant, Optional s
                     Dim security As Element
                     Set security = msg.GetElement("securityData").GetValue(i)
                     
-                    Dim tempdict As Object
-                    Set tempdict = CreateObject("Scripting.Dictionary")
-                    tempdict.CompareMode = vbTextCompare
+                    If Not dict.exists(security.GetElement("security").Value) Then
                     
-                    dict.Add security.GetElement("security").Value, tempdict
-                    
-                    Dim fields As Element
-                    Set fields = security.GetElement("fieldData")
-                    Dim numFields As Integer
-                    numFields = fields.NumElements
-                    
-                    Dim fldplace As Integer
-                    Dim a As Integer
-                    For a = 0 To numFields - 1
-                        fldplace = a
-                        Dim field As Element
-                        Set field = fields.GetElement(a)
+                        Dim tempdict As Object
+                        Set tempdict = CreateObject("Scripting.Dictionary")
+                        tempdict.CompareMode = vbTextCompare
                         
-                        dict(security.GetElement("security").Value).Add sFldList(a), field.Value
-                    Next
-                    
+                        dict.Add security.GetElement("security").Value, tempdict
+                        
+                        Dim fields As Element
+                        Set fields = security.GetElement("fieldData")
+                        Dim numFields As Integer
+                        numFields = fields.NumElements
+                        
+                        Dim fldplace As Integer
+                        Dim a As Integer
+                        For a = 0 To numFields - 1
+                            fldplace = a
+                            Dim field As Element
+                            Set field = fields.GetElement(a)
+                            
+                            dict(security.GetElement("security").Value).Add sFldList(a), field.Value
+                        Next
+                    End If
                 Next
             Loop
             
@@ -204,57 +206,61 @@ Public Function HisRequest(sSecList() As String, _
                 Dim tempdict As Object
                 Set tempdict = CreateObject("Scripting.Dictionary")
                 tempdict.CompareMode = vbTextCompare
-                            
-                dict.Add securityName.Value, tempdict
                 
-                Dim b As Long
-                
-                For b = 0 To fieldData.NumValues - 1
-                    Dim fields As blpapicomLib2.Element
-                    Set fields = fieldData.GetValue(b)
-                    Dim a As Integer
-                    Dim numFields As Integer
-                    numFields = fields.NumElements
+                If Not dict.exists(securityName.Value) Then
+                            
+                    dict.Add securityName.Value, tempdict
                     
-                    'for the first loop going through all data fields, set up the second layer dictionary key, the third layer is an array
-                    If b = 0 Then
-                        
-                        For a = 0 To numFields - 1
-                            Dim field As Element
-                            Set field = fields.GetElement(a)
-                            
-                            Dim temparr As Variant
-                            ReDim temparr(0) As Variant
-                            temparr(0) = field.Value
-                            
-                            dict(securityName.Value).Add field.Name, temparr
-                            
-                        Next
-                        
-                    Else
-                        For a = 0 To numFields - 1
-                            
-                            Set field = fields.GetElement(a)
-                            
-                            Dim tempdict2 As Object
-                            Set tempdict2 = CreateObject("Scripting.Dictionary")
-                            tempdict2.CompareMode = vbTextCompare
-                            
-                            Set tempdict2 = dict(securityName.Value)
-                            
-                            Dim temparr2 As Variant
-                       
-                            temparr2 = tempdict2(field.Name)
-                            
-                            ReDim Preserve temparr2(0 To b)
-                            temparr2(b) = field.Value
-                            
-                            dict(securityName.Value)(field.Name) = temparr2
-                            
-                        Next
-                    End If
+                    Dim b As Long
                     
-                Next b
+                    For b = 0 To fieldData.NumValues - 1
+                        Dim fields As blpapicomLib2.Element
+                        Set fields = fieldData.GetValue(b)
+                        Dim a As Integer
+                        Dim numFields As Integer
+                        numFields = fields.NumElements
+                        
+                        'for the first loop going through all data fields, set up the second layer dictionary key, the third layer is an array
+                        If b = 0 Then
+                            
+                            For a = 0 To numFields - 1
+                                Dim field As Element
+                                Set field = fields.GetElement(a)
+                                
+                                Dim temparr As Variant
+                                ReDim temparr(0) As Variant
+                                temparr(0) = field.Value
+                                
+                                dict(securityName.Value).Add field.Name, temparr
+                                
+                            Next
+                            
+                        Else
+                            For a = 0 To numFields - 1
+                                
+                                Set field = fields.GetElement(a)
+                                
+                                Dim tempdict2 As Object
+                                Set tempdict2 = CreateObject("Scripting.Dictionary")
+                                tempdict2.CompareMode = vbTextCompare
+                                
+                                Set tempdict2 = dict(securityName.Value)
+                                
+                                Dim temparr2 As Variant
+                           
+                                temparr2 = tempdict2(field.Name)
+                                
+                                ReDim Preserve temparr2(0 To b)
+                                temparr2(b) = field.Value
+                                
+                                dict(securityName.Value)(field.Name) = temparr2
+                                
+                            Next
+                        End If
+                        
+                    Next b
+                    
+                End If
             Loop
             
             
