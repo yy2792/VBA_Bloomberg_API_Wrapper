@@ -1,0 +1,273 @@
+'Yingke
+'name the class module as Bloomwrap
+
+Option Explicit
+Option Compare Text
+
+Private session As blpapicomLib2.session
+Dim refdataservice As blpapicomLib2.Service
+
+
+' Instantiate the Bloomberg COM Control
+Private Sub Class_Initialize()
+
+    Set session = New blpapicomLib2.session
+    session.QueueEvents = True
+    session.Start
+   
+    session.OpenService ("//blp/refdata")
+    Set refdataservice = session.GetService("//blp/refdata")
+    
+End Sub
+
+'Destroy the Bloomberg COM Control
+Private Sub Class_Terminate()
+   Set session = Nothing
+End Sub
+
+Public Function RefRequest(sSecList() As String, sFldList As Variant, Optional sOverrideFields As Variant, Optional sOverrideValues As Variant) As Variant
+
+    Dim req As Request
+    Dim nRow As Long
+    
+    Set req = refdataservice.CreateRequest("ReferenceDataRequest")
+    
+    'Set up output dictionary
+    Dim dict As Object
+    Set dict = CreateObject("Scripting.Dictionary")
+    dict.CompareMode = vbTextCompare
+    
+    For nRow = LBound(sSecList, 1) To UBound(sSecList, 1)
+        req.GetElement("securities").AppendValue sSecList(nRow)
+    Next
+    
+    For nRow = LBound(sFldList, 1) To UBound(sFldList, 1)
+        req.GetElement("fields").AppendValue sFldList(nRow)
+    Next
+    
+    Dim overrides As Element
+    Set overrides = req.GetElement("overrides")
+    
+    If Not VBA.IsMissing(sOverrideFields) = True And Not VBA.IsMissing(sOverrideValues) = True Then
+        If UBound(sOverrideFields, 1) <> UBound(sOverrideValues, 1) Then
+            Err.Raise vbObjectError, "Bloomwrap", "Override Fields are of different Size!"
+        Else
+            For nRow = LBound(sOverrideFields, 1) To UBound(sOverrideFields, 1)
+              Dim override  As Element
+              Set override = overrides.AppendElment()
+              override.SetElement "fieldId", sOverrideFields(nRow)
+              override.SetElement "value", sOverrideValues(nRow)
+            Next
+        End If
+    End If
+    
+    session.SendRequest req
+    
+    Dim eventObj As blpapicomLib2.Event
+    
+    Do
+        Set eventObj = session.NextEvent() ' this will block code execution until the next event is received
+        If eventObj.EventType = PARTIAL_RESPONSE Or eventObj.EventType = RESPONSE Then
+            Dim it As blpapicomLib2.MessageIterator
+            Set it = eventObj.CreateMessageIterator()
+            
+            Do While it.Next()
+                Dim msg As Message
+                Set msg = it.Message
+                
+                Dim numSecurities As Integer
+                numSecurities = msg.GetElement("securityData").NumValues
+                
+                Dim i As Integer
+                For i = 0 To numSecurities - 1
+                    Dim security As Element
+                    Set security = msg.GetElement("securityData").GetValue(i)
+                    
+                    Dim tempdict As Object
+                    Set tempdict = CreateObject("Scripting.Dictionary")
+                    tempdict.CompareMode = vbTextCompare
+                    
+                    dict.Add security.GetElement("security").Value, tempdict
+                    
+                    Dim fields As Element
+                    Set fields = security.GetElement("fieldData")
+                    Dim numFields As Integer
+                    numFields = fields.NumElements
+                    
+                    Dim fldplace As Integer
+                    Dim a As Integer
+                    For a = 0 To numFields - 1
+                        fldplace = a
+                        Dim field As Element
+                        Set field = fields.GetElement(a)
+                        
+                        dict(security.GetElement("security").Value).Add sFldList(a), field.Value
+                    Next
+                    
+                Next
+            Loop
+            
+            'RefRequest = output
+            Set RefRequest = dict
+            
+            If eventObj.EventType = RESPONSE Then Exit Do
+            
+        End If
+    Loop
+    
+    
+End Function
+
+
+'the difference between hist and ref is that, retriving of more than one ticker takes two events in hist
+Public Function HisRequest(sSecList() As String, _
+                              sFldList As Variant, _
+                              StartDate As String, _
+                              EndDate As String, _
+                              Optional calendarCodeOverride As Variant, _
+                              Optional currencyCode As Variant, _
+                              Optional returnRelativeDate As Variant, _
+                              Optional nonTradingDayFillOption As Variant, _
+                              Optional nonTradingDayFillMethod As Variant, _
+                              Optional periodicityAdjustment As Variant, _
+                              Optional periodicitySelection As Variant, _
+                              Optional maxDataPoints As Variant, _
+                              Optional pricingOption As Variant, _
+                              Optional overrideOption As Variant, _
+                              Optional adjustmentFollowDPDF As Variant, _
+                              Optional adjustmentAbnormal As Variant, _
+                              Optional adjustmentSplit As Variant, _
+                              Optional adjustmentNormal As Variant _
+                              ) As Variant
+                              
+    Dim req As Request
+    Dim nRow As Long
+    
+   ' Set up the history request
+    Set req = refdataservice.CreateRequest("HistoricalDataRequest")
+    
+    'set up output dictionary
+    Dim dict As Object
+    Set dict = CreateObject("Scripting.Dictionary")
+    dict.CompareMode = vbTextCompare
+    
+    For nRow = LBound(sSecList, 1) To UBound(sSecList, 1)
+        req.GetElement("securities").AppendValue (sSecList(nRow))
+    Next
+    
+    For nRow = LBound(sFldList, 1) To UBound(sFldList, 1)
+        req.GetElement("fields").AppendValue (sFldList(nRow))
+    Next
+    
+    'req.Set "periodicitySelection", "DAILY"
+    req.Set "startDate", StartDate
+    req.Set "endDate", EndDate
+    
+    'set up all the optional inputs
+    If Not VBA.IsMissing(calendarCodeOverride) = True Then req.Set "calendarCodeOverride", calendarCodeOverride
+    If Not VBA.IsMissing(currencyCode) = True Then req.Set "currency", currencyCode
+    If Not VBA.IsMissing(returnRelativeDate) = True Then req.Set "returnRelativeDate", returnRelativeDate
+    If Not VBA.IsMissing(nonTradingDayFillOption) = True Then req.Set "nonTradingDayFillOption", nonTradingDayFillOption
+    If Not VBA.IsMissing(nonTradingDayFillMethod) = True Then req.Set "nonTradingDayFillMethod", nonTradingDayFillMethod
+    If Not VBA.IsMissing(periodicityAdjustment) = True Then req.Set "periodicityAdjustment", periodicityAdjustment
+    If Not VBA.IsMissing(periodicitySelection) = True Then req.Set "periodicitySelection", periodicitySelection
+    If Not VBA.IsMissing(maxDataPoints) = True Then req.Set "maxDataPoints", maxDataPoints                                  '
+    If Not VBA.IsMissing(pricingOption) = True Then req.Set "pricingOption", pricingOption
+    If Not VBA.IsMissing(overrideOption) = True Then req.Set "overrideOption", overrideOption
+    If Not VBA.IsMissing(adjustmentFollowDPDF) = True Then req.Set "adjustmentFollowDPDF", adjustmentFollowDPDF
+    If Not VBA.IsMissing(adjustmentAbnormal) = True Then req.Set "adjustmentAbnormal", adjustmentAbnormal
+    If Not VBA.IsMissing(adjustmentSplit) = True Then req.Set "adjustmentSplit", adjustmentSplit
+    If Not VBA.IsMissing(adjustmentNormal) = True Then req.Set "adjustmentNormal", adjustmentNormal
+    
+    
+    session.SendRequest req
+       
+    Dim eventObj As blpapicomLib2.Event
+    
+    'for historical data, each event gives out for one security
+    Do
+        Set eventObj = session.NextEvent() ' this will block code execution until the next event is received
+        If eventObj.EventType = PARTIAL_RESPONSE Or eventObj.EventType = RESPONSE Then
+            Dim it As blpapicomLib2.MessageIterator
+            Set it = eventObj.CreateMessageIterator()
+            
+            Do While it.Next()
+                Dim msg As Message
+                Set msg = it.Message
+                Dim securityData As Element
+                Dim securityName As Element
+                Dim fieldData As Element
+                Set securityData = msg.GetElement("securityData")
+                Set securityName = securityData.GetElement("security")
+                Set fieldData = securityData.GetElement("fieldData")
+                
+                Dim tempdict As Object
+                Set tempdict = CreateObject("Scripting.Dictionary")
+                tempdict.CompareMode = vbTextCompare
+                            
+                dict.Add securityName.Value, tempdict
+                
+                Dim b As Long
+                
+                For b = 0 To fieldData.NumValues - 1
+                    Dim fields As blpapicomLib2.Element
+                    Set fields = fieldData.GetValue(b)
+                    Dim a As Integer
+                    Dim numFields As Integer
+                    numFields = fields.NumElements
+                    
+                    'for the first loop going through all data fields, set up the second layer dictionary key, the third layer is an array
+                    If b = 0 Then
+                        
+                        For a = 0 To numFields - 1
+                            Dim field As Element
+                            Set field = fields.GetElement(a)
+                            
+                            Dim temparr As Variant
+                            ReDim temparr(0) As Variant
+                            temparr(0) = field.Value
+                            
+                            dict(securityName.Value).Add field.Name, temparr
+                            
+                        Next
+                        
+                    Else
+                        For a = 0 To numFields - 1
+                            
+                            Set field = fields.GetElement(a)
+                            
+                            Dim tempdict2 As Object
+                            Set tempdict2 = CreateObject("Scripting.Dictionary")
+                            tempdict2.CompareMode = vbTextCompare
+                            
+                            Set tempdict2 = dict(securityName.Value)
+                            
+                            Dim temparr2 As Variant
+                       
+                            temparr2 = tempdict2(field.Name)
+                            
+                            ReDim Preserve temparr2(0 To b)
+                            temparr2(b) = field.Value
+                            
+                            dict(securityName.Value)(field.Name) = temparr2
+                            
+                        Next
+                    End If
+                    
+                Next b
+            Loop
+            
+            
+            Set HisRequest = dict
+            
+            
+            If eventObj.EventType = RESPONSE Then Exit Do
+            
+        End If
+
+    Loop
+    
+                    
+
+End Function
+
