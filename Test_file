@@ -1,0 +1,123 @@
+Option Compare Text
+
+Sub try1()
+
+Dim sec() As String
+Dim fd As Variant
+
+ReDim sec(0 To 1) As String
+sec(0) = "IBM US Equity"
+sec(1) = "VOD LN Equity"
+
+ReDim fd(0 To 1) As String
+fd(0) = "NAME"
+fd(1) = "PX LAST"
+
+Dim overf As Variant
+ReDim overf(0 To 1) As String
+overf(0) = "VWAP_START_DT"
+overf(1) = "VWAP_END_DT"
+
+Dim overd As Variant
+ReDim overd(0 To 1) As String
+overd(0) = "20100825"
+overd(1) = "20100825"
+
+Debug.Print "New Round!!!!!!!!!!!!!!!!!!!!!!!!!!"
+
+Dim out1 As Object
+Set out1 = CreateObject("Scripting.Dictionary")
+out1.CompareMode = vbTextCompare
+    
+
+Set out1 = bbControl.RefRequest(sec, fd, overf, overd)
+
+Dim key As Variant
+Dim key2 As Variant
+
+For Each key In out1
+    Debug.Print "KEY: " & key
+    For Each key2 In out1(key)
+        Debug.Print "Second Key " & key2
+        Debug.Print "Second Value " & out1(key)(key2)
+    Next
+Next
+
+End Sub
+
+Sub try2()
+
+Dim sec() As String
+Dim fd As Variant
+
+ReDim sec(0 To 1) As String
+sec(0) = "IBM US Equity"
+sec(1) = "AAPL US Equity"
+
+ReDim fd(0) As String
+fd(0) = "PX LAST"
+
+Debug.Print "New Round!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+
+Dim out1 As Object
+Set out1 = CreateObject("Scripting.Dictionary")
+out1.CompareMode = vbTextCompare
+    
+
+Set out1 = bbControl.HisRequest(sec, fd, "20180102", "20180105")
+
+Dim i As Integer
+
+Dim key As Variant
+Dim key2 As Variant
+
+For Each key In out1
+    Debug.Print "KEY: " & key
+    For Each key2 In out1(key)
+        Debug.Print "Second Key " & key2
+        For i = LBound(out1(key)(key2)) To UBound(out1(key)(key2))
+            Debug.Print out1(key)(key2)(i)
+        Next
+    Next
+Next
+
+End Sub
+
+
+Sub try3()
+
+Dim sec() As String
+Dim fd As Variant
+
+ReDim sec(0 To 1) As String
+sec(0) = "IBM US Equity"
+sec(1) = "AAPL US Equity"
+
+ReDim fd(0) As String
+fd(0) = "PX LAST"
+
+Debug.Print "New Round!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+
+Dim out1 As Object
+Set out1 = CreateObject("Scripting.Dictionary")
+out1.CompareMode = vbTextCompare
+    
+Set out1 = bbControl.HisRequest(sec, fd, "20180101", "20180104", , , True, "ALL_CALENDAR_DAYS", "PREVIOUS_VALUE", "CALENDAR", "DAILY", , "PRICING_OPTION_YIELD", "OVERRIDE_OPTION_CLOSE", True)
+
+
+Dim i As Integer
+
+Dim key As Variant
+Dim key2 As Variant
+
+For Each key In out1
+    Debug.Print "KEY: " & key
+    For Each key2 In out1(key)
+        Debug.Print "Second Key " & key2
+        For i = LBound(out1(key)(key2)) To UBound(out1(key)(key2))
+            Debug.Print out1(key)(key2)(i)
+        Next
+    Next
+Next
+
+End Sub
