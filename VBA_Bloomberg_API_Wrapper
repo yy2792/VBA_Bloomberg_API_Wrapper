@@ -25,7 +25,21 @@ Private Sub Class_Terminate()
 End Sub
 
 Public Function RefRequest(sSecList() As String, sFldList As Variant, Optional sOverrideFields As Variant, Optional sOverrideValues As Variant) As Variant
-
+	
+	On Error GoTo 0
+    
+    If VBA.IsMissing(sSecList) = True Or VBA.IsMissing(sFldList) = True Then
+        Err.Raise vbObjectError, "Bloomwrap", "Empty Security or empty fields"
+    End If
+    
+    Dim checkvar As Variant
+    
+    For Each checkvar In sSecList
+        If checkvar = "" Then
+            Err.Raise vbObjectError, "Bloomwrap", "Empty Security or empty fields!"
+        End If
+    Next
+	
     Dim req As Request
     Dim nRow As Long
     
@@ -141,7 +155,21 @@ Public Function HisRequest(sSecList() As String, _
                               Optional adjustmentSplit As Variant, _
                               Optional adjustmentNormal As Variant _
                               ) As Variant
-                              
+							  
+    On Error GoTo 0
+    
+    If VBA.IsMissing(sSecList) = True Or VBA.IsMissing(sFldList) = True Then
+        Err.Raise vbObjectError, "Bloomwrap", "Empty Security or empty fields!"
+    End If
+    
+    Dim checkvar As Variant
+    
+    For Each checkvar In sSecList
+        If checkvar = "" Then
+            Err.Raise vbObjectError, "Bloomwrap", "Empty Security or empty fields!"
+        End If
+    Next
+	
     Dim req As Request
     Dim nRow As Long
     
