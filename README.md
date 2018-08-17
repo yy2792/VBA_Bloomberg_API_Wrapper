@@ -18,7 +18,7 @@ Excel, Bloomberg API COM 3.5 Type Library
 
 ## Running the tests
 
-In test module, run macro try1, try2, try3 which show examples of how to use the Bloomberg Wrapper class.
+In test module, run macro try1, try2, try3 on a bloomberg terminal, the tests show examples of how to use the Bloomberg Wrapper class.
 
 ## Contributing
 
