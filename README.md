@@ -1,6 +1,6 @@
 # VBA_Bloomberg_API_Wrapper
 
-This is a VBA class module of a Bloomberg API Wrapper. The features of this wrapper include requesting historical (BDH) and reference data (BDP) from VBA. 
+This is a VBA class module of a Bloomberg API Wrapper. The features of this wrapper include requesting historical (BDH) and reference data (BDP) from Bloomberg. 
 
 ## Getting Started
 
