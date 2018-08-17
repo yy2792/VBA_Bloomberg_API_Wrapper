@@ -24,9 +24,9 @@ In test module, run macro try1, try2, try3 on a bloomberg terminal, the tests sh
 
 Please read [Bloomberg API Library](https://www.bloomberg.com/professional/support/api-library/) for details on our code of conduct, and the process for submitting pull requests to us.
 
-## Authors
+## Author
 
-* **Yingke Yu** - *Initial work* - [yy2792](https://github.com/yy2792)
+* **Yingke Yu** [yy2792](https://github.com/yy2792)
 
 ## Acknowledgments
 
