@@ -2,11 +2,11 @@
 
 This is a VBA class module of a Bloomberg API Wrapper. The features of this wrapper include requesting historical (BDH) and reference data (BDP) from Bloomberg. 
 
-### Prerequisites
+## Prerequisites
 
 Excel, Bloomberg API COM 3.5 Type Library
 
-### Installing
+## Installing
 
 * Create a macro-enabled spreadsheet, in reference enable Bloomberg API COM 3.5 Type Library.
 * Insert a class module, name it "Bloomwrap" ( or whatever you prefer ), paste whole VBA_Bloomberg_API_Wrapper into the class module.
