@@ -1,3 +1,4 @@
+Dim bbControl As New Bloomwrap
 Option Compare Text
 
 Sub try1()
